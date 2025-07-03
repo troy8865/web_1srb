@@ -4,19 +4,30 @@ import json
 import sys
 from datetime import datetime
 
-def generate_stream_info(stream_info, url):
-    """Generate HLS stream info text"""
-    info_parts = ['#EXT-X-STREAM-INF:']
+def validate_config(config):
+    required_keys = {
+        'output': ['folder', 'masterFolder', 'bestFolder'],
+        'channels': ['name', 'slug', 'url']
+    }
     
-    if stream_info.program_id:
-        info_parts.append(f'PROGRAM-ID={stream_info.program_id},')
-    if stream_info.bandwidth:
-        info_parts.append(f'BANDWIDTH={stream_info.bandwidth},')
-    if stream_info.codecs:
-        codecs = ','.join(stream_info.codecs)
-        info_parts.append(f'CODECS="{codecs}",')
-    if stream_info.resolution:
-        info_parts.append(f'RESOLUTION={stream_info.resolution[0]}x{stream_info.resolution[1]}')
+    for section, keys in required_keys.items():
+        if section not in config:
+            raise ValueError(f"Missing section in config: {section}")
+        for key in keys:
+            if key not in config[section]:
+                if section == 'channels':
+                    for i, channel in enumerate(config['channels']):
+                        if key not in channel:
+                            raise ValueError(f"Channel {i} missing key: {key}")
+                else:
+                    raise ValueError(f"Missing key in {section}: {key}")
+
+def main(config_path):
+    with open(config_path) as f:
+        config = json.load(f)
+    
+    validate_config(config)  # <-- Əlavə edildi
+    ...
     
     return ''.join(info_parts) + f'\n{url}\n'
 
