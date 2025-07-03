@@ -1,3 +1,4 @@
-# Ignore everything in streams except m3u8 files
+# streams qovluğunu ignore et, ancaq içindəki .m3u8 fayllarını yox
 streams/*
 !streams/*.m3u8
+
