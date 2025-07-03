@@ -1,18 +1,17 @@
 import os
 import re
 import requests
-import yaml
-from urllib.parse import urlparse
+import json
 from datetime import datetime
 
 class StreamUpdater:
-    def __init__(self, config_file='config.yml'):
+    def __init__(self, config_file='config.json'):
         self.config = self.load_config(config_file)
         self.create_output_folder()
         
     def load_config(self, config_file):
         with open(config_file, 'r') as f:
-            return yaml.safe_load(f)
+            return json.load(f)
     
     def create_output_folder(self):
         if not os.path.exists(self.config['output']['folder']):
