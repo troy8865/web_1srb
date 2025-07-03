@@ -44,10 +44,14 @@ def playlist_text(url):
 def save_if_changed(path, content):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
-            if f.read() == content:
-                return  # Heç nə dəyişməyib
+            existing = f.read()
+            if existing == content:
+                print(f"Fayl dəyişməyib: {path}")
+                return
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
+        print(f"Fayl YENİLƏNDİ: {path}")
+
 
 def main():
     if len(sys.argv) < 2:
