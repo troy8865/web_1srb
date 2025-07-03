@@ -17,7 +17,7 @@ def get_stream_url(url, pattern):
             print(f"Nəticə tapılmadı: {url}")
             return None
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"Xəta: {e}")
         return None
 
 def playlist_text(url):
@@ -42,6 +42,7 @@ def playlist_text(url):
     return text
 
 def save_if_changed(path, content):
+    os.makedirs(os.path.dirname(path), exist_ok=True)  # Qovluğu avtomatik yarat
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             if f.read() == content:
@@ -53,15 +54,14 @@ def save_if_changed(path, content):
 
 def main():
     if len(sys.argv) < 2:
-        print("İstifadə: python main.py config.json")
+        print("Istifadə: python main.py config.json")
         return
 
     with open(sys.argv[1], "r", encoding="utf-8") as f:
         config = json.load(f)
 
     output_folder = config["output"].get("folder", "streams")
-    os.makedirs(output_folder, exist_ok=True)
-    pattern = config.get("pattern", r"https?:\/\/[^\s\"']+\.m3u8")
+    pattern = config.get("pattern", r"https?:\\/\\/[^\\s\"']+\\.m3u8")
 
     for ch in tqdm(config["channels"]):
         name = ch["name"]
@@ -78,8 +78,11 @@ def main():
             print(f"{name} üçün stream tapılmadı.")
 
     print("\nSTREAMS QOVLUĞUNDAKI FAYLLAR:")
-    for f in os.listdir(output_folder):
-        print(" -", f)
+    if os.path.exists(output_folder):
+        for f in os.listdir(output_folder):
+            print(" -", f)
+    else:
+        print("Qovluq yaradılmadı ya da fayl yoxdur.")
 
 if __name__ == "__main__":
     main()
