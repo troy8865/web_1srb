@@ -1,4 +1,0 @@
-# ignore all inside streams
-streams/*
-# except m3u8 files
-!streams/*.m3u8
