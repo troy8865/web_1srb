@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Asılılıqları quraşdır
+      - name: Asılılıqları yüklə
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -29,10 +29,13 @@ jobs:
       - name: Skripti işə sal
         run: python main.py config.json
 
-      - name: Dəyişiklikləri git ilə push et
+      - name: Git status-u göstər
+        run: git status
+
+      - name: Faylları commit və push et
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add streams/ || true
+          git add streams/*.m3u8 || true
           git commit -m "updated streams" || echo "No changes to commit"
           git push
