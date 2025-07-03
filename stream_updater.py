@@ -1,120 +1,115 @@
+
 import streamlink
-import os
-import json
 import sys
-from datetime import datetime
+import os 
+import json
 
-def validate_config(config):
-    required_keys = {
-        'output': ['folder', 'masterFolder', 'bestFolder'],
-        'channels': ['name', 'slug', 'url']
-    }
-    
-    for section, keys in required_keys.items():
-        if section not in config:
-            raise ValueError(f"Missing section in config: {section}")
-        for key in keys:
-            if key not in config[section]:
-                if section == 'channels':
-                    for i, channel in enumerate(config['channels']):
-                        if key not in channel:
-                            raise ValueError(f"Channel {i} missing key: {key}")
-                else:
-                    raise ValueError(f"Missing key in {section}: {key}")
+def info_to_text(stream_info, url):
+    text = '#EXT-X-STREAM-INF:'
+    if stream_info.program_id:
+        text = text + 'PROGRAM-ID=' + str(stream_info.program_id) + ','
+    if stream_info.bandwidth:
+        text = text + 'BANDWIDTH=' + str(stream_info.bandwidth) + ','
+    if stream_info.codecs:
+        text = text + 'CODECS="'
+        codecs = stream_info.codecs
+        for i in range(0, len(codecs)):
+            text = text + codecs[i]
+            if len(codecs) - 1 != i:
+                text = text + ','
+        text = text + '",'
+    if stream_info.resolution.width:
+        text = text + 'RESOLUTION=' + str(stream_info.resolution.width) + 'x' + str(stream_info.resolution.height) 
 
-def main(config_path):
-    with open(config_path) as f:
-        config = json.load(f)
-    
-    validate_config(config)  # <-- Əlavə edildi
-    ...
-    
-    return ''.join(info_parts) + f'\n{url}\n'
+    text = text + "\n" + url + "\n"
+    return text
 
-def process_channel(channel, output_dirs):
-    """Process single channel stream"""
-    try:
-        streams = streamlink.streams(channel['url'])
-        if not streams or 'best' not in streams:
-            raise Exception("No streams found")
+def main():
+    # Loading config file
+    f = open(sys.argv[1], "r")
+    config = json.load(f)
 
-        playlists = streams['best'].multivariant.playlists
-        master_content = []
-        best_content = None
-        max_resolution = 0
+    # Getting output options and creating folders
+    folder_name = config["output"]["folder"]
+    best_folder_name = config["output"]["bestFolder"]
+    master_folder_name = config["output"]["masterFolder"]
+    current_dir = os.getcwd()
+    root_folder = os.path.join(current_dir, folder_name)
+    best_folder = os.path.join(root_folder, best_folder_name)
+    master_folder = os.path.join(root_folder, master_folder_name)
+    os.makedirs(best_folder, exist_ok=True)
+    os.makedirs(master_folder, exist_ok=True)
 
-        # Process all available qualities
-        for playlist in sorted(playlists, key=lambda x: x.stream_info.resolution[1] if x.stream_info.resolution else 0, reverse=True):
-            if playlist.stream_info.video == "audio_only":
-                continue
+    channels = config["channels"]
+    for channel in channels:
+        # Get streams and playlists
+        try:
+            url = channel["url"]
+            streams = streamlink.streams(url)
+            playlists = streams['best'].multivariant.playlists
+
+            # Text preparation
+            previous_res_height = 0
+            master_text = ''
+            best_text = ''
+
+            # Check http/https options
+            http_flag = False
+            if url.startswith("http://"):
+                plugin_name, plugin_type, given_url  = streamlink.session.Streamlink().resolve_url(url)
+                http_flag = True
+
+            for playlist in playlists:
+                uri = playlist.uri
+                info = playlist.stream_info
+                # Sorting sub-playlist based on 
+                if info.video != "audio_only": 
+                    sub_text = info_to_text(info, uri)
+                    if info.resolution.height > previous_res_height:
+                        master_text = sub_text  + master_text
+                        best_text = sub_text
+                    else:
+                        master_text = master_text + sub_text
+                    previous_res_height = info.resolution.height
+            
+            # Necessary values for HLS
+            if master_text:
+                if streams['best'].multivariant.version:
+                    master_text = '#EXT-X-VERSION:' + str(streams['best'].multivariant.version) + "\n" + master_text
+                    best_text = '#EXT-X-VERSION:' + str(streams['best'].multivariant.version) + "\n" + best_text
+                master_text = '#EXTM3U\n' + master_text
+                best_text = '#EXTM3U\n' + best_text
+
+            # HTTPS -> HTTP for cinergroup plugin
+            if http_flag:
+                if plugin_name == "cinergroup":
+                    master_text = master_text.replace("https://", "http://")
+                    best_text = best_text.replace("https://", "http://")
+
+            # File operations
+            master_file_path = os.path.join(master_folder, channel["slug"] + ".m3u8")
+            best_file_path = os.path.join(best_folder, channel["slug"] + ".m3u8")
+
+            if master_text:
+                master_file = open(master_file_path, "w+")
+                master_file.write(master_text)
+                master_file.close()
+
+                best_file = open(best_file_path, "w+")
+                best_file.write(best_text)
+                best_file.close()
                 
-            stream_url = playlist.uri
-            stream_info = generate_stream_info(playlist.stream_info, stream_url)
-            
-            master_content.append(stream_info)
-            
-            # Track best quality
-            current_res = playlist.stream_info.resolution[1] if playlist.stream_info.resolution else 0
-            if current_res > max_resolution:
-                max_resolution = current_res
-                best_content = stream_info
+            else:
+                if os.path.isfile(master_file_path):
+                    os.remove(master_file_path)
+                    os.remove(best_file_path)
+        except Exception as e:
+            master_file_path = os.path.join(master_folder, channel["slug"] + ".m3u8")
+            best_file_path = os.path.join(best_folder, channel["slug"] + ".m3u8")
+            if os.path.isfile(master_file_path):
+                os.remove(master_file_path)
+            if os.path.isfile(best_file_path):
+                os.remove(best_file_path)
 
-        # Generate final content
-        if master_content:
-            version = streams['best'].multivariant.version or 3
-            header = f'#EXTM3U\n#EXT-X-VERSION:{version}\n'
-            
-            # Save master playlist (all qualities)
-            master_path = os.path.join(output_dirs['master'], f"{channel['slug']}.m3u8")
-            with open(master_path, 'w') as f:
-                f.write(header + ''.join(master_content))
-            
-            # Save best quality
-            best_path = os.path.join(output_dirs['best'], f"{channel['slug']}.m3u8")
-            with open(best_path, 'w') as f:
-                f.write(header + best_content)
-            
-            print(f"✅ {channel['name']} updated (Best: {max_resolution}p)")
-            return True
-
-    except Exception as e:
-        print(f"❌ {channel['name']} failed: {str(e)}")
-        # Clean up failed channels
-        for dir_type in ['master', 'best']:
-            file_path = os.path.join(output_dirs[dir_type], f"{channel['slug']}.m3u8")
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        return False
-
-def main(config_path):
-    with open(config_path) as f:
-        config = json.load(f)
-
-    # Create output directories
-    output_dirs = {
-        'root': config['output']['folder'],
-        'master': os.path.join(config['output']['folder'], config['output']['masterFolder']),
-        'best': os.path.join(config['output']['folder'], config['output']['bestFolder'])
-    }
-    
-    for dir_path in output_dirs.values():
-        os.makedirs(dir_path, exist_ok=True)
-
-    # Process all channels
-    success_count = 0
-    for channel in config['channels']:
-        if channel.get('enabled', True):
-            if process_channel(channel, output_dirs):
-                success_count += 1
-
-    # Generate timestamp file
-    with open(os.path.join(output_dirs['root'], 'last_update.txt'), 'w') as f:
-        f.write(datetime.now().isoformat())
-
-    print(f"\n🎉 {success_count}/{len(config['channels'])} channels updated successfully")
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python stream_updater.py <config.json>")
-        sys.exit(1)
-    main(sys.argv[1])
+if __name__=="__main__": 
+    main() 
