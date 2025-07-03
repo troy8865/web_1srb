@@ -100,7 +100,7 @@ def main(config_path):
     with open(os.path.join(output_dirs['root'], 'last_update.txt'), 'w') as f:
         f.write(datetime.now().isoformat())
 
-    print(f"\n🎉 {success_count}/{len(config['channels']} channels updated successfully")
+    print(f"\n🎉 {success_count}/{len(config['channels'])} channels updated successfully")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
