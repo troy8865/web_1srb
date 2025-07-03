@@ -2,50 +2,51 @@ name: Extract and Push m3u8 (Scheduled)
 
 on:
   schedule:
-    - cron: '*/1 * * * *'  # Hər 1 saat bir işə düşür
-  workflow_dispatch:        # Manual trigger da qalsın
+    - cron: '2 * * * *'  # Runs every hour at minute 0
+  workflow_dispatch:     # Manual trigger
 
 jobs:
   extract-m3u8:
-    runs-on: ubuntu-latest  # Ubuntu ən son versiyasında işləsin
+    runs-on: ubuntu-latest
     steps:
-      # 1. Repository-ni checkout et
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed to detect changes properly
 
-      # 2. Python quraşdır
+      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Python 3.9 istifadə et
+          python-version: '3.9'
 
-      # 3. Tələb olunan paketləri quraşdır
+      # 3. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests pyyaml
 
-      # 4. Python skriptini işə sal
+      # 4. Run Python script
       - name: Run Python script
-        run: |
-          python main.py
-          
-      # 5. Dəyişiklikləri yoxla
+        run: python stream_updater.py
+
+      # 5. Check for changes
       - name: Check for changes
         id: changes
         run: |
-          if [[ $(git status --porcelain) ]]; then
-            echo "changes_detected=true" >> $GITHUB_STREAMS
+          git add streams/
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
           else
-            echo "changes_detected=false" >> $GITHUB_STREAMS
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
           fi
 
-      # 6. Dəyişikliklər varsa, commit et və push et
+      # 6. Commit and push changes if any
       - name: Commit and push changes
         if: steps.changes.outputs.changes_detected == 'true'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Automatically streams file"
-          git push https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+          git commit -m "Auto-update: Refresh m3u8 streams [skip ci]"
+          git push
