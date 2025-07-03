@@ -78,3 +78,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print("Qovluq içindəkilər:")
+for f in os.listdir("streams"):
+    print(" -", f)
+
