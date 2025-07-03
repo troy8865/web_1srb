@@ -1,0 +1,3 @@
+# Ignore everything in streams except m3u8 files
+streams/*
+!streams/*.m3u8
