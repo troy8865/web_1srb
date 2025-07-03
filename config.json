@@ -7,18 +7,18 @@
     },
     "channels": [
         {
-            "name": "Show Max",
+            "name": "ShowMax",
             "slug": "showmax",
             "url": "http://showmax.com.tr/canliyayin"
         },
         {
-            "name": "Show Türk",
+            "name": "ShowTürk",
             "slug": "showturk",
             "url": "https://www.showturk.com.tr/canli-yayin/showturk"
         },
         {
-            "name": "SHOW TV",
-            "slug": "SHOW TV",
+            "name": "SHOWTV",
+            "slug": "SHOWTV",
             "url": "https://www.showtv.com.tr/canli-yayin"
         },
         {
@@ -27,9 +27,9 @@
             "url": "https://www.kanald.com.tr/canli-yayin"
         },
         {
-            "name": "Sözcü TV",
-            "slug": "sozcutv",
-            "url": "https://www.youtube.com/@Sozcutelevizyonu/live"
+            "name": "atv",
+            "slug": "atv",
+            "url": "https://www.atv.com.tr/canli-yayin"
         },
         {
             "name": "Tele 1",
