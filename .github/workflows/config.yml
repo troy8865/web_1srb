@@ -1,52 +1,47 @@
-name: Extract and Push m3u8 (Scheduled)
+name: Update Stream Links
 
 on:
   schedule:
-    - cron: '2 * * * *'  # Runs every hour at minute 0
-  workflow_dispatch:     # Manual trigger
+    - cron: '0 * * * *'  # Run every hour at minute 0
+  workflow_dispatch:     # Manual trigger option
 
 jobs:
-  extract-m3u8:
+  update-streams:
     runs-on: ubuntu-latest
+    
     steps:
-      # 1. Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Needed to detect changes properly
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      # 2. Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests pyyaml
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
 
-      # 4. Run Python script
-      - name: Run Python script
-        run: python stream_updater.py
+    - name: Run stream updater
+      run: python stream_updater.py
 
-      # 5. Check for changes
-      - name: Check for changes
-        id: changes
-        run: |
-          git add streams/
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-          else
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
-          fi
+    - name: Check for changes
+      id: changes
+      run: |
+        git add streams/
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changes_detected=true" >> $GITHUB_OUTPUT
+        else
+          echo "changes_detected=false" >> $GITHUB_OUTPUT
+        fi
 
-      # 6. Commit and push changes if any
-      - name: Commit and push changes
-        if: steps.changes.outputs.changes_detected == 'true'
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git commit -m "Auto-update: Refresh m3u8 streams [skip ci]"
-          git push
+    - name: Commit and push changes
+      if: steps.changes.outputs.changes_detected == 'true'
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git commit -m "Auto-update: Refresh stream links [skip ci]"
+        git push
