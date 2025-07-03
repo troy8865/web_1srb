@@ -1,88 +1,78 @@
 import os
 import re
-import sys
-import json
 import requests
-from slugify import slugify
-from tqdm import tqdm
-from urllib.parse import urljoin
+import yaml
+from urllib.parse import urlparse
+from datetime import datetime
 
-def get_stream_url(url, pattern):
-    try:
-        r = requests.get(url, timeout=10)
-        results = re.findall(pattern, r.text)
-        if results:
-            return results[0].replace("\\", "")
-        else:
-            print(f"Nəticə tapılmadı: {url}")
+class StreamUpdater:
+    def __init__(self, config_file='config.yml'):
+        self.config = self.load_config(config_file)
+        self.create_output_folder()
+        
+    def load_config(self, config_file):
+        with open(config_file, 'r') as f:
+            return yaml.safe_load(f)
+    
+    def create_output_folder(self):
+        if not os.path.exists(self.config['output']['folder']):
+            os.makedirs(self.config['output']['folder'])
+    
+    def fetch_url_content(self, url):
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            return response.text
+        except requests.RequestException as e:
+            print(f"Error fetching {url}: {e}")
             return None
-    except Exception as e:
-        print(f"Xəta: {e}")
-        return None
-
-def playlist_text(url):
-    text = ""
-    try:
-        r = requests.get(url, timeout=10)
-        if r.status_code == 200:
-            for line in r.iter_lines():
-                try:
-                    line = line.decode(errors="ignore")
-                except:
-                    continue
-                if not line:
-                    continue
-                if line[0] != "#":
-                    text += urljoin(url, line)
+    
+    def extract_m3u8_link(self, content):
+        matches = re.findall(self.config['pattern'], content)
+        return matches[0] if matches else None
+    
+    def generate_m3u8_content(self, channel_name, stream_url):
+        return f"""#EXTM3U
+#EXTINF:-1 tvg-id="{channel_name}" tvg-name="{channel_name}" group-title="Live",{channel_name}
+{stream_url}
+"""
+    
+    def save_stream_file(self, channel_name, content):
+        filename = os.path.join(self.config['output']['folder'], f"{channel_name}.m3u8")
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"Updated {channel_name}.m3u8")
+    
+    def update_all_channels(self):
+        for channel in self.config['channels']:
+            print(f"Processing {channel['name']}...")
+            content = self.fetch_url_content(channel['url'])
+            if content:
+                m3u8_link = self.extract_m3u8_link(content)
+                if m3u8_link:
+                    m3u8_content = self.generate_m3u8_content(channel['name'], m3u8_link)
+                    self.save_stream_file(channel['name'], m3u8_content)
                 else:
-                    text += line
-                text += "\n"
-    except:
-        return ""
-    return text
-
-def save_if_changed(path, content):
-    os.makedirs(os.path.dirname(path), exist_ok=True)  # Qovluğu avtomatik yarat
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            if f.read() == content:
-                print(f"Fayl dəyişməyib: {path}")
-                return
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
-        print(f"Fayl YENİLƏNDİ: {path}")
-
-def main():
-    if len(sys.argv) < 2:
-        print("Istifadə: python main.py config.json")
-        return
-
-    with open(sys.argv[1], "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    output_folder = config["output"].get("folder", "streams")
-    pattern = config.get("pattern", r"https?:\\/\\/[^\\s\"']+\\.m3u8")
-
-    for ch in tqdm(config["channels"]):
-        name = ch["name"]
-        url = ch["url"]
-        stream_url = get_stream_url(url, pattern)
-        if stream_url:
-            playlist = playlist_text(stream_url)
-            if playlist:
-                file_path = os.path.join(output_folder, slugify(name.lower()) + ".m3u8")
-                save_if_changed(file_path, playlist)
+                    print(f"No m3u8 link found for {channel['name']}")
             else:
-                print(f"{name} üçün playlist boşdur.")
-        else:
-            print(f"{name} üçün stream tapılmadı.")
-
-    print("\nSTREAMS QOVLUĞUNDAKI FAYLLAR:")
-    if os.path.exists(output_folder):
-        for f in os.listdir(output_folder):
-            print(" -", f)
-    else:
-        print("Qovluq yaradılmadı ya da fayl yoxdur.")
+                print(f"Failed to fetch content for {channel['name']}")
+        
+        # Create playlist file
+        self.create_playlist_file()
+    
+    def create_playlist_file(self):
+        playlist_path = os.path.join(self.config['output']['folder'], "playlist.m3u8")
+        with open(playlist_path, 'w', encoding='utf-8') as f:
+            f.write("#EXTM3U\n")
+            for channel in self.config['channels']:
+                filename = f"{channel['name']}.m3u8"
+                f.write(f"#EXTINF:-1 tvg-id=\"{channel['name']}\",{channel['name']}\n")
+                f.write(f"{filename}\n")
+        print("Created playlist.m3u8")
 
 if __name__ == "__main__":
-    main()
+    updater = StreamUpdater()
+    updater.update_all_channels()
