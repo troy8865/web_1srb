@@ -1,0 +1,3 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="kanald" tvg-name="kanald" group-title="Live",kanald
+https://demiroren.daioncdn.net/kanald/kanald.m3u8

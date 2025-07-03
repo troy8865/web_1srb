@@ -1,0 +1,19 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="showturk",showturk
+showturk.m3u8
+#EXTINF:-1 tvg-id="showmax",showmax
+showmax.m3u8
+#EXTINF:-1 tvg-id="showtv",showtv
+showtv.m3u8
+#EXTINF:-1 tvg-id="atv",atv
+atv.m3u8
+#EXTINF:-1 tvg-id="kanald",kanald
+kanald.m3u8
+#EXTINF:-1 tvg-id="beyaz",beyaz
+beyaz.m3u8
+#EXTINF:-1 tvg-id="m24",m24
+m24.m3u8
+#EXTINF:-1 tvg-id="eurostartv",eurostartv
+eurostartv.m3u8
+#EXTINF:-1 tvg-id="yaban",yaban
+yaban.m3u8
