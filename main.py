@@ -12,7 +12,7 @@ def get_stream_url(url, pattern):
         r = requests.get(url, timeout=10)
         results = re.findall(pattern, r.text)
         if results:
-            return results[0].replace("\\", "")  # escape-ləri təmizləyir
+            return results[0].replace("\\", "")
         else:
             print(f"Nəticə tapılmadı: {url}")
             return None
@@ -23,7 +23,7 @@ def get_stream_url(url, pattern):
 def playlist_text(url):
     text = ""
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=10)
         if r.status_code == 200:
             for line in r.iter_lines():
                 try:
@@ -44,14 +44,12 @@ def playlist_text(url):
 def save_if_changed(path, content):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
-            existing = f.read()
-            if existing == content:
+            if f.read() == content:
                 print(f"Fayl dəyişməyib: {path}")
                 return
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
         print(f"Fayl YENİLƏNDİ: {path}")
-
 
 def main():
     if len(sys.argv) < 2:
@@ -74,15 +72,14 @@ def main():
             if playlist:
                 file_path = os.path.join(output_folder, slugify(name.lower()) + ".m3u8")
                 save_if_changed(file_path, playlist)
-                print(f"Yazıldı: {file_path}")
             else:
                 print(f"{name} üçün playlist boşdur.")
         else:
             print(f"{name} üçün stream tapılmadı.")
 
+    print("\nSTREAMS QOVLUĞUNDAKI FAYLLAR:")
+    for f in os.listdir(output_folder):
+        print(" -", f)
+
 if __name__ == "__main__":
     main()
-    print("Qovluq içindəkilər:")
-for f in os.listdir("streams"):
-    print(" -", f)
-
