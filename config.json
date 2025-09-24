@@ -42,39 +42,39 @@
             "url": "https://www.startv.com.tr/canli-yayin"
         },
         {
-            "name": "rossiya-1",
-            "slug": "rossiya-1",
-            "url": "https://d-iptv.az/web-player#/tv/favorite/allChannel/channel/185/"
+            "name": "trtspor",
+            "slug": "trtspor",
+            "url": https://www.trtspor.com.tr/canli-yayin-izle/trt-spor"
         },
         {
-            "name": "TRT Haber",
-            "slug": "trthaber",
-            "url": "https://www.youtube.com/@trthaber/live"
+            "name": "Tabii",
+            "slug": "Tabii",
+            "url": "https://www.tabii.com/tr/watch/live/trt1?trackId=150002"
         },
         {
-            "name": "SUNNAH",
-            "slug": "SUNNAH",
-            "url": "https://www.elahmad.com/tv/sunnatv.php"
+            "name": "nowtv",
+            "slug": "nowtv",
+            "url": "https://www.nowtv.com.tr/canli-yayin"
         },
         {
-            "name": "tv100",
-            "slug": "tv100",
-            "url": "https://www.youtube.com/@tv100/live"
+            "name": "beyaztv",
+            "slug": "beyaztv",
+            "url": "https://beyaztv.com.tr/canli-yayin"
         },
         {
-            "name": "TVNET",
-            "slug": "tvnet",
-            "url": "https://www.youtube.com/@TVNET/live"
+            "name": "aspor",
+            "slug": "aspor",
+            "url": "https://www.aspor.com.tr/webtv/canli-yayin"
         },
         {
-            "name": "Ülke TV",
-            "slug": "ulketv",
-            "url": "https://www.dailymotion.com/video/x7yb4xm"
+            "name": "halktv",
+            "slug": "halktv",
+            "url": "https://halktv.com.tr/canli-yayin"
         },
         {
-            "name": "Ulusal Kanal",
-            "slug": "ulusalkanal",
-            "url": "https://www.youtube.com/@ulusalkanalTV/live"
+            "name": "szctv",
+            "slug": "szctv",
+            "url": "https://www.szctv.com.tr/canli-yayin-izle"
         },
         {
             "name": "Vav TV",
