@@ -36,14 +36,14 @@
             "url": "https://www.kanal7.com/canli-izle"
         },
         {
-            "name": "STARTV",
-            "slug": "STARTV",
+            "name": "startv",
+            "slug": "startv",
             "url": "https://www.startv.com.tr/canli-yayin"
         },
         {
-            "name": "rossiya-1",
-            "slug": "rossiya-1",
-            "url": "https://d-iptv.az/web-player#/tv/favorite/allChannel/channel/185/"
+            "name": "nowtv",
+            "slug": "nowtv",
+            "url": "https://www.nowtv.com.tr/canli-yayin"
         },
         {
             "name": "TRT Haber",
@@ -51,9 +51,9 @@
             "url": "https://www.youtube.com/@trthaber/live"
         },
         {
-            "name": "SUNNAH",
-            "slug": "SUNNAH",
-            "url": "https://www.elahmad.com/tv/sunnatv.php"
+            "name": "beyaztv",
+            "slug": "beyaztv",
+            "url": "https://beyaztv.com.tr/canli-yayin"
         },
         {
             "name": "tv100",
