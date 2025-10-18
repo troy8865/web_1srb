@@ -2,7 +2,7 @@ name: Update Stream Links
 
 on:
   schedule:
-    - cron: "0 */2 * * *"  # Hər 2 saatda bir (0-cı dəqiqədə)
+    - cron: "0 */2 * * *"  # Hər 1 saatda bir (0-cı dəqiqədə)
   workflow_dispatch:       # Manual trigger üçün
 
 jobs:
